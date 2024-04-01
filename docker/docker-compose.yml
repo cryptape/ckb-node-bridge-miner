@@ -31,8 +31,7 @@ services:
     container_name: kafka
 
   ckb:
-    image: nervos/ckb:v0.115.0-rc2
-    user: root
+    image: nervos/ckb:v0.115.0
     ports:
       - 8114:8114   # rpc
 #      - 8115:8115   # p2p network
