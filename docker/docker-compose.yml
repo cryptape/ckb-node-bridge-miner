@@ -2,7 +2,7 @@ version: '3'
 
 services:
   mysql:
-    image: mysql:latest
+    image: mysql:5.7.44
     ports:
       - 3306:3306
     environment:
@@ -31,7 +31,7 @@ services:
     container_name: kafka
 
   ckb:
-    image: nervos/ckb:v0.116.1
+    image: nervos/ckb:v0.117.0
     user: root
     ports:
       - 8114:8114   # rpc
