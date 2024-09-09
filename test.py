@@ -31,7 +31,7 @@ def get_tip_block_number(url):
 
 
 # 启动 docker-compose
-subprocess.run("cd docker && docker-compose up > docker-compose.log 2>&1 &", shell=True)
+subprocess.run("cd docker && docker compose up > docker-compose.log 2>&1 &", shell=True)
 
 # 启动 nodebridge
 nodebridge_command = "RUST_LOG=info ./ckbNodeBridge/target/debug/nodebridge ckb --rpc_addr http://127.0.0.1:8114 --rpc_interval 3000 --kafka_brokers 127.0.0.1:9092 --db_url mysql://root:123456@127.0.0.1:8006/demo --job_topic tominer --solved_share_topic tochain > ckbNodeBridge.log 2>&1 &"
@@ -45,7 +45,7 @@ time.sleep(60)
 
 # 查询mysql数据库表found_blocks的所有信息
 docker_compose_path = "docker"
-mysql_command = f"docker-compose exec -T mysql mysql -uroot -p123456 -hmysql -P3306 demo -e 'SELECT * FROM found_blocks;'"
+mysql_command = f"docker compose exec -T mysql mysql -uroot -p123456 -hmysql -P3306 demo -e 'SELECT * FROM found_blocks;'"
 result = subprocess.check_output(mysql_command, shell=True, cwd=docker_compose_path)
 print(result.decode('utf-8'))
 tip_number = get_tip_block_number("http://localhost:8114/")
