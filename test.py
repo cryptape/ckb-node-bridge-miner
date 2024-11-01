@@ -34,7 +34,7 @@ def get_tip_block_number(url):
 subprocess.run("cd docker && docker compose up > docker-compose.log 2>&1 &", shell=True)
 
 # 启动 nodebridge
-nodebridge_command = "RUST_LOG=info ./ckbNodeBridge/target/debug/nodebridge ckb --rpc_addr http://127.0.0.1:8114 --rpc_interval 3000 --kafka_brokers 127.0.0.1:9092 --db_url mysql://root:123456@127.0.0.1:8006/demo --job_topic tominer --solved_share_topic tochain > ckbNodeBridge.log 2>&1 &"
+nodebridge_command = "RUST_LOG=info ./ckbNodeBridge/target/debug/nodebridge ckb --rpc_addr http://127.0.0.1:8114 --rpc_interval 3000 --kafka_brokers 127.0.0.1:9092 --db_url mysql://root:123456@127.0.0.1:3306/demo --job_topic tominer --solved_share_topic tochain > ckbNodeBridge.log 2>&1 &"
 subprocess.run(nodebridge_command, shell=True, executable='/bin/bash')
 
 # 启动 ckb-node-bridge-miner
