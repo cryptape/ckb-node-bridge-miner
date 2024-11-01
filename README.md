@@ -23,7 +23,7 @@ docker-compose up
 link: https://github.com/zhangsoledad/ckbNodeBridge
 
 ```shell
-RUST_LOG=info ./nodebridge ckb --rpc_addr http://127.0.0.1:8114 --rpc_interval 3000 --kafka_brokers 127.0.0.1:9092 --db_url mysql://root:123456@127.0.0.1:8006/demo --job_topic tominer --solved_share_topic tochain
+RUST_LOG=info ./nodebridge ckb --rpc_addr http://127.0.0.1:8114 --rpc_interval 3000 --kafka_brokers 127.0.0.1:9092 --db_url mysql://root:123456@127.0.0.1:3306/demo --job_topic tominer --solved_share_topic tochain
 ```
 
 ### ckb-node-bridge-miner
