@@ -11,8 +11,18 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      # Override any rust-toolchain file shipped in cloned subrepos (e.g. ckbNodeBridge),
+      # so the toolchain pinned by this workflow is always used.
+      RUSTUP_TOOLCHAIN: "1.86.0"
+
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.86.0"
 
       - name: build-ckbNodeBridge
         run: make build-ckbNodeBridge
@@ -23,7 +33,65 @@ jobs:
       - name: Run test
         run: make test
 
-      - name: curl
+      - name: Start docker compose services
+        working-directory: docker
+        run: docker compose up -d
+
+      - name: Wait for ckb RPC to be ready
         run: |
-          curl --location 'localhost:8114/' --header 'Content-Type: application/json' --data '{	"jsonrpc":"2.0","method":"get_tip_block_number",	"params":[],	"id":64}'
+          for i in $(seq 1 60); do
+            if curl -sf -X POST -H 'Content-Type: application/json' \
+                 --data '{"jsonrpc":"2.0","method":"get_tip_block_number","params":[],"id":1}' \
+                 http://localhost:8114/ >/dev/null; then
+              echo "ckb RPC is ready"
+              exit 0
+            fi
+            echo "waiting for ckb... ($i)"
+            sleep 5
+          done
+          echo "ckb RPC did not become ready in time"
+          docker compose -f docker/docker-compose.yml logs ckb || true
+          exit 1
+
+      - name: Wait for MySQL to be ready
+        working-directory: docker
+        run: |
+          for i in $(seq 1 60); do
+            if docker compose exec -T mysql mysqladmin ping -uroot -p123456 -hmysql --silent; then
+              echo "MySQL is ready"
+              exit 0
+            fi
+            echo "waiting for mysql... ($i)"
+            sleep 3
+          done
+          echo "MySQL did not become ready in time"
+          docker compose logs mysql || true
+          exit 1
+
+      - name: Wait for found_blocks table
+        working-directory: docker
+        run: |
+          for i in $(seq 1 30); do
+            if docker compose exec -T mysql mysql -uroot -p123456 -hmysql -P3306 demo -e 'SELECT 1 FROM found_blocks LIMIT 1;' >/dev/null 2>&1; then
+              echo "found_blocks table is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "found_blocks table not ready"
+          exit 1
+
+      - name: Smoke test ckb RPC and MySQL
+        run: |
+          curl --location 'localhost:8114/' --header 'Content-Type: application/json' --data '{"jsonrpc":"2.0","method":"get_tip_block_number","params":[],"id":64}'
           cd docker && docker compose exec -T mysql mysql -uroot -p123456 -hmysql -P3306 demo -e 'SELECT * FROM found_blocks;'
+
+      - name: Dump docker compose logs on failure
+        if: failure()
+        working-directory: docker
+        run: docker compose logs
+
+      - name: Stop docker compose
+        if: always()
+        working-directory: docker
+        run: docker compose down -v
